@@ -1,0 +1,24 @@
+{
+  "name": "heapscrape",
+  "version": "0.0.0",
+  "description": "Scrape Heap Analytics and email results somewhere.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/alexose/heapscrape.git"
+  },
+  "author": "Alexander Ose <alex@alexose.com> (http://alexose.com/)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alexose/heapscrape/issues"
+  },
+  "homepage": "https://github.com/alexose/heapscrape",
+  "dependencies": {
+    "cheerio": "^0.18.0",
+    "sievejs": "0.0.4",
+    "spooky": "^0.2.5"
+  }
+}
