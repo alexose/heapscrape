@@ -2,8 +2,7 @@ var sieve = require('sievejs')
   , qs = require('querystring');
 
 var options = {
-  hooks : { onFinish: one },
-  verbose : true
+  hooks : { onFinish: one }
 };
 
 var data = JSON.stringify({
@@ -12,9 +11,12 @@ var data = JSON.stringify({
     "engine": "jquery",
     "debug": true,
     "useHeaders" : true,
+    "verbose" : true,
     "then": {
         "url": "https://heapanalytics.com/login",
         "method": "POST",
+        "useHeaders" : true,
+        "redirect" : false,
         "form": {
             "email" : "alex@crimsonhexagon.com",
             "password" : "4kNzhwQsMNDEtRxh",
@@ -30,8 +32,9 @@ new sieve(data, options);
 
 function one(results){
 
-  var data = results[0].entry.then.data
-    , cookie = data['set-cookie'][0];
+  var cookie = results[0].cookie[0];
+
+  console.log(cookie);
 
   // The heap token requires some URLencoded stuff to be jammed into it:
   var decoded = qs.decode(cookie)
@@ -50,13 +53,18 @@ function one(results){
   obj.proj_id = '1822452561';
   obj.write_perm = true; 
 
-  decoded['heap.sid'] = sid.replace(json, JSON.stringify(obj));
+  var result = sid.replace(json, JSON.stringify(obj));
 
-  cookie = qs.stringify(decoded);
+  // URLEncode everything up to token
+  var arr = result.split(';')
+    , encoded = qs.escape(arr.shift()) + ';';
 
-
+  cookie = 'heap.sid=' + encoded;
+  
   console.log('Generated cookie.  Getting reports JSON...');
 
+  console.log(cookie);
+  
   var data = JSON.stringify({
     "url" : "https://heapanalytics.com/api/report",
     "redirect": false,
