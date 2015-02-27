@@ -70,37 +70,33 @@ function three (json){
     var report = arr[i],
       query = report.query;
 
-  if (report.name.toLowerCase().indexOf('product') !== 0){
-    continue;
-  }
+    if (report.name.toLowerCase().indexOf('product') === 0){
+      
+      expected++;
 
-  expected++;
+      // Build form obj
+      var form = {
+        'query[over][start]':          query.over.start, 
+        'query[over][step]':           query.over.step,
+        'query[over][stop]':           query.over.stop,
+        'query[over][offset]':         query.over.offset,
+        'query[over][unique]':         query.over.unique,
+        'query[main][type]':           query.main.type,
+        'query[main][fn]':             query.main.fn, 
+        'query[main][property][type]': query.main.property.type,
+        'query[main][property][id]':   query.main.property.id,
+        'query[main][format]':         'csv',
+        'query[by][type]':             query.by.type, 
+        'query[by][name]':             query.by.name
+      }
 
-    // Build form obj
-    var form = {
-      'query[over][start]':          query.over.start, 
-      'query[over][step]':           query.over.step,
-      'query[over][stop]':           query.over.stop,
-      'query[over][offset]':         query.over.offset,
-      'query[over][unique]':         query.over.unique,
-      'query[main][type]':           query.main.type,
-      'query[main][fn]':             query.main.fn, 
-      'query[main][property][type]': query.main.property.type,
-      'query[main][property][id]':   query.main.property.id,
-      'query[main][format]':         'csv',
-      'query[by][type]':             query.by.type, 
-      'query[by][name]':             query.by.name
+      getCSV(form, check);
     }
-
-    getCSV(form, check);
   }
 
   function check(json){
-
-  var obj = JSON.parse(json[0]);
-
+    var obj = JSON.parse(json[0]);
     csvs.push(obj.csv);
-
     if (csvs.length === expected){
       four(csvs);
     }
@@ -113,9 +109,9 @@ function getCSV(form, cb){
     "method" : "POST",
     "form": form,
     "headers" : {
-        "Cookie" : cookie,
-        "X-CSRF-Token" : csrf,
-        "X-Requested-With" : "XMLHttpRequest"
+      "Cookie" : cookie,
+      "X-CSRF-Token" : csrf,
+      "X-Requested-With" : "XMLHttpRequest"
     }
   });
 
@@ -158,11 +154,19 @@ var source = ''
     + '{{#reports}}'
     + '<table>'
     +   '{{#rows}}'
+    +   '{{#if @first}}'
+    +   '<thead>'
+    +     '{{#cols}}'
+    +     '<th>{{.}}</th>'
+    +     '{{/cols}}'
+    +   '</thead>'
+    +   '{{else}}'
     +   '<tr>'
     +     '{{#cols}}'
-    +     '<td>{{.}}</td>'
+    +     '<td style="min-width: 60px">{{.}}</td>'
     +     '{{/cols}}'
     +   '</tr>'
+    +   '{{/if}}'
     +   '{{/rows}}'
     + '</table>'
     + '{{/reports}}';
