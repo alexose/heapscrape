@@ -17,6 +17,7 @@ var data = JSON.stringify({
         "method": "POST",
         "useHeaders" : true,
         "redirect" : false,
+		"debug" : true,
         "form": {
             "email" : "alex@crimsonhexagon.com",
             "password" : "4kNzhwQsMNDEtRxh",
@@ -32,39 +33,8 @@ new sieve(data, options);
 
 function one(results){
 
-  var cookie = results[0].cookie[0];
+  var cookie = results[0].result[0].cookie;
 
-  console.log(cookie);
-
-  // The heap token requires some URLencoded stuff to be jammed into it:
-  var decoded = qs.decode(cookie)
-    , sid = decoded['heap.sid'];
-
-  // Find the curly brackets
-  var begin = sid.indexOf('{')
-    , end = sid.indexOf('}') - 3
-    , json = sid.substr(begin, end)
-    , obj = JSON.parse(json);
-
-  // Add params
-  obj.email = 'alex@crimsonhexagon.com';
-  obj.app_id = '1822452561';
-  obj.env_id = '1822452561';
-  obj.proj_id = '1822452561';
-  obj.write_perm = true; 
-
-  var result = sid.replace(json, JSON.stringify(obj));
-
-  // URLEncode everything up to token
-  var arr = result.split(';')
-    , encoded = qs.escape(arr.shift()) + ';';
-
-  cookie = 'heap.sid=' + encoded;
-  
-  console.log('Generated cookie.  Getting reports JSON...');
-
-  console.log(cookie);
-  
   var data = JSON.stringify({
     "url" : "https://heapanalytics.com/api/report",
     "redirect": false,
@@ -81,8 +51,13 @@ function one(results){
   new sieve(data, options);
 }
 
-function two(results){
-  console.log(results);
+function two(json){
+	var obj = JSON.parse(json);
+	console.log(obj);
+}
+
+function getCSV(id, cb){
+	
 }
 
 
