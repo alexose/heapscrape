@@ -1,11 +1,11 @@
 var sieve = require('sievejs')
   , qs = require('querystring');
 
-var options = {
-  hooks : { onFinish: one }
-};
+one();
 
-var data = JSON.stringify({
+function one(){
+
+  var data = JSON.stringify({
     "url": "https://heapanalytics.com/login",
     "selector": { "csrf" : "$(input[name='_csrf']).val()" },
     "engine": "jquery",
@@ -13,27 +13,30 @@ var data = JSON.stringify({
     "useHeaders" : true,
     "verbose" : true,
     "then": {
-        "url": "https://heapanalytics.com/login",
-        "method": "POST",
-        "useHeaders" : true,
-        "redirect" : false,
-		"debug" : true,
-        "form": {
-            "email" : "alex@crimsonhexagon.com",
-            "password" : "4kNzhwQsMNDEtRxh",
-            "_csrf" : "{{csrf}}"
-        },
-        "headers" : {
-            "Content-Type" : "application/x-www-form-urlencoded"
-        }
+      "url": "https://heapanalytics.com/login",
+      "method": "POST",
+      "useHeaders" : true,
+      "redirect" : false,
+      "debug" : true,
+      "form": {
+        "email" : "alex@crimsonhexagon.com",
+        "password" : "4kNzhwQsMNDEtRxh",
+        "_csrf" : "{{csrf}}"
+      },
+      "headers" : {
+        "Content-Type" : "application/x-www-form-urlencoded"
+      }
     }
-});
+  });
 
-new sieve(data, options);
+  new sieve(data, { hooks : { onFinish : two } });
+}
 
-function one(results){
+var cookie, csrf;
+function two(results){
 
-  var cookie = results[0].result[0].cookie;
+  cookie = results[0].result[0].cookie[0],
+    csrf = results[0].entry.then.data.csrf[0];
 
   var data = JSON.stringify({
     "url" : "https://heapanalytics.com/api/report",
@@ -41,23 +44,60 @@ function one(results){
     "headers" : {
         "Cookie" : cookie
     }
-  })
+  });
 
-  options = {
-    hooks : { onFinish: two },
-    verbose : true
+  new sieve(data, { hooks : { onFinish : three } });
+}
+
+function three (json){
+  var arr = JSON.parse(json),
+    csvs = [];
+  
+  arr = [1];
+
+  for (var i in arr){
+    var report = arr[i];
+
+    // Build form obj
+    var form = {
+      'query[over][start]':          '-604800000',
+      'query[over][step]':           '86400000',
+      'query[over][stop]':           '1425099600000',
+      'query[over][offset]':         '300',
+      'query[over][unique]':         true,
+      'query[main][type]':           'agg',
+      'query[main][fn]':             'count',
+      'query[main][property][type]': 'object',
+      'query[main][property][id]':   'symbol:75551',
+      'query[main][format]':         'csv',
+      'query[by][type]':             'field',
+      'query[by][name]':             'target_text'
+    }
+
+    getCSV(form, check);
   }
 
-  new sieve(data, options);
+  function check(csv){
+    console.log(csv);
+    csvs.push(csv);
+  }
 }
 
-function two(json){
-	var obj = JSON.parse(json);
-	console.log(obj);
-}
+function getCSV(form, cb){
+  var data = JSON.stringify({
+    "url" : "https://heapanalytics.com/api/csv",
+    "method" : "POST",
+    "form": form,
+    "headers" : {
+        "Cookie" : cookie,
+        "X-CSRF-Token" : csrf,
+        "X-Requested-With" : "XMLHttpRequest"
+    }
+  });
 
-function getCSV(id, cb){
-	
+  console.log(data);
+
+  new sieve(data, { hooks : { onFinish : cb } });
 }
 
 
