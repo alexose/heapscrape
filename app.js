@@ -1,25 +1,10 @@
-var sieve = require('sievejs')
-  , qs = require('querystring')
-  , parser = require('fast-csv')
-  , handlebars = require('handlebars')
-  , nodemailer = require('nodemailer')
-  , log = require('npmlog');
-
-var options = require('./config.js');
-
-var transport = nodemailer.createTransport({
-  service: "SES",
-    auth: {
-      user: options.aws.user,
-      pass: options.aws.pass 
-    }
-});
-
-var mailOptions = {
-  from : options.aws.from,
-  to : options.aws.to,
-  subject : 'User metrics for the week of ____'
-};
+var sieve    = require('sievejs'),
+  qs         = require('querystring'),
+  parser     = require('fast-csv'),
+  handlebars = require('handlebars'),
+  nodemailer = require('nodemailer'),
+  log        = require('npmlog')
+  options    = require('./config.js');
 
 one();
 
@@ -79,11 +64,11 @@ function three (json){
   
   var arr = JSON.parse(json),
     csvs = [],
-  expected = 0;
+    expected = 0;
   
   for (var i in arr){
     var report = arr[i],
-    query = report.query;
+      query = report.query;
 
   if (report.name.toLowerCase().indexOf('product') !== 0){
     continue;
@@ -185,7 +170,22 @@ var source = ''
 function five(reports){
   
   log.info("Sending CSVs...");
-  
+
+  // Configure mail services
+  var transport = nodemailer.createTransport({
+    service: "SES",
+      auth: {
+        user: options.aws.user,
+        pass: options.aws.pass 
+      }
+  });
+
+  var mailOptions = {
+    from : options.aws.from,
+    to : options.aws.to,
+    subject : 'User metrics for the week of ' + getDate()
+  };
+
   var template = handlebars.compile(source)
     , html = template({ reports : reports });
 
@@ -200,4 +200,23 @@ function five(reports){
 
     transport.close();
   });
+}
+
+// via http://stackoverflow.com/questions/1531093
+function getDate(){
+  var today = new Date();
+  var dd = today.getDate();
+  var mm = today.getMonth()+1; //January is 0!
+  var yyyy = today.getFullYear();
+
+  if(dd<10) {
+      dd='0'+dd
+  } 
+
+  if(mm<10) {
+      mm='0'+mm
+  } 
+
+  today = mm+'/'+dd+'/'+yyyy;
+  return today; 
 }
