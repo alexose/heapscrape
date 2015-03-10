@@ -136,40 +136,56 @@ function four(arr){
 
   for (var i in arr){
     var item = arr[i], 
-	  name = item.name,
-	  csv = item.csv,
+      name = item.name,
+      csv = item.csv,
       rows = [],
       rarr = csv.split('\n');
 
     // Only look at first 30 rows
     for (var c=0; c<30; c++){
       var cols = [],
-        arr = rarr[c].split(',');
+        carr = rarr[c].split(',');
 
-      // Push title
-      cols.push(arr.shift())
+      // Push title (unless first row)
+      if (c === 0){
+        cols.push('');
+        carr.shift();
+      } else {
+        cols.push(carr.shift())
+      }
 
-      // TODO: sum everything else?
-      cols = cols.concat(arr);
+      cols = cols.concat(carr);
 
+      // Sum everything
+      if (c === 0){
+        cols.push('Total')
+      } else {
+        var first = cols.shift();
+
+        var total = cols.reduce(function(a, b){
+          var sum = parseInt(a, 10) + parseInt(b, 10); 
+          return sum;
+        });
+
+        cols.push(total);
+        cols.unshift(first);
+      }
       rows.push({ cols : cols });
     }
-  
     reports.push({ rows : rows, name : name });
   }
-
   five(reports);
 }
 
 var source = ''
     + '{{#reports}}'
-	+ '<h3>{{name}}</h3>'
+    + '<h3>{{name}}</h3>'
     + '<table>'
     +   '{{#rows}}'
     +   '{{#if @first}}'
     +   '<thead>'
     +     '{{#cols}}'
-    +     '<th>{{.}}</th>'
+    +     '<th style="text-align: left;">{{.}}</th>'
     +     '{{/cols}}'
     +   '</thead>'
     +   '{{else}}'
