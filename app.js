@@ -68,7 +68,7 @@ function two(results){
   new sieve(data, { hooks : { onFinish : three } });
 }
 
-function three (json){
+function three(json){
   
   log.info('Getting CSVs...');
   
@@ -87,12 +87,16 @@ function three (json){
       // Build form obj
       query.main.format = 'csv';
       var string = param({query : query});
-
-      getCSV(string, check);
+      getCSV(string, check.bind(this, report.name));
     }
   }
 
-  function check(json){
+  if (!expected){
+    log.error('Could not find any reports beginning with ' + options.prefix + '.');
+    process.exit(1);
+  }
+
+  function check(name, json){
     try {
       var obj = JSON.parse(json[0]);
     } catch(e){
@@ -100,9 +104,8 @@ function three (json){
       process.exit(1);
     }
 
-    csvs.push(obj.csv);
-
-    log.info(csvs.length + ' out of ' + expected);
+    csvs.push({ name : name, csv : obj.csv });
+    log.info('Got ' + csvs.length + ' out of ' + expected);
     if (csvs.length === expected){
       four(csvs);
     }
@@ -113,7 +116,7 @@ function getCSV(params, cb){
   var data = JSON.stringify({
     "url" : "https://heapanalytics.com/api/csv",
     "method" : "POST",
-	"body" : params,
+    "body" : params,
     "headers" : {
       "Cookie" : cookie,
       "X-CSRF-Token" : csrf,
@@ -125,14 +128,16 @@ function getCSV(params, cb){
 }
 
 // Process csvs
-function four(csvs){
+function four(arr){
 
   log.info('Processing CSVs...');
 
   var reports = [];
 
-  for (var i in csvs){
-    var csv = csvs[i],
+  for (var i in arr){
+    var item = arr[i], 
+	  name = item.name,
+	  csv = item.csv,
       rows = [],
       rarr = csv.split('\n');
 
@@ -150,7 +155,7 @@ function four(csvs){
       rows.push({ cols : cols });
     }
   
-    reports.push({ rows : rows });
+    reports.push({ rows : rows, name : name });
   }
 
   five(reports);
@@ -158,6 +163,7 @@ function four(csvs){
 
 var source = ''
     + '{{#reports}}'
+	+ '<h3>{{name}}</h3>'
     + '<table>'
     +   '{{#rows}}'
     +   '{{#if @first}}'
