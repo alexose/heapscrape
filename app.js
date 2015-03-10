@@ -3,10 +3,20 @@ var sieve    = require('sievejs'),
   parser     = require('fast-csv'),
   handlebars = require('handlebars'),
   nodemailer = require('nodemailer'),
-  log        = require('npmlog')
+  log        = require('npmlog'),
+  param      = require('node-jquery-param'),
   options    = require('./config.js');
 
-one();
+var args = process.argv || [];
+
+if (!args[2]){
+  console.log('Heapscrape will log into your Heap Analytics account, grab all the saved reports, and email them somewhere.');
+  console.log('Usage: node app.js email@example.com [prefix]');
+} else {
+  options.to = args[2];
+  options.prefix = args[3] || '';
+  one();
+}
 
 function one(){
 
@@ -70,51 +80,47 @@ function three (json){
     var report = arr[i],
       query = report.query;
 
-    if (report.name.toLowerCase().indexOf('product') === 0){
+    if (report.name.toLowerCase().indexOf(options.prefix) === 0){
       
       expected++;
 
       // Build form obj
-      var form = {
-        'query[over][start]':          query.over.start, 
-        'query[over][step]':           query.over.step,
-        'query[over][stop]':           query.over.stop,
-        'query[over][offset]':         query.over.offset,
-        'query[over][unique]':         query.over.unique,
-        'query[main][type]':           query.main.type,
-        'query[main][fn]':             query.main.fn, 
-        'query[main][property][type]': query.main.property.type,
-        'query[main][property][id]':   query.main.property.id,
-        'query[main][format]':         'csv',
-        'query[by][type]':             query.by.type, 
-        'query[by][name]':             query.by.name
-      }
+      query.main.format = 'csv';
+      var string = param({query : query});
 
-      getCSV(form, check);
+      getCSV(string, check);
     }
   }
 
   function check(json){
-    var obj = JSON.parse(json[0]);
+    try {
+      var obj = JSON.parse(json[0]);
+    } catch(e){
+      log.error('Couldn\'t parse CSV: ' + json);
+      process.exit(1);
+    }
+
     csvs.push(obj.csv);
+
+    log.info(csvs.length + ' out of ' + expected);
     if (csvs.length === expected){
       four(csvs);
     }
   }
 }
 
-function getCSV(form, cb){
+function getCSV(params, cb){
   var data = JSON.stringify({
     "url" : "https://heapanalytics.com/api/csv",
     "method" : "POST",
-    "form": form,
+	"body" : params,
     "headers" : {
       "Cookie" : cookie,
       "X-CSRF-Token" : csrf,
       "X-Requested-With" : "XMLHttpRequest"
     }
   });
-
+  
   new sieve(data, { hooks : { onFinish : cb } });
 }
 
@@ -186,7 +192,7 @@ function five(reports){
 
   var mailOptions = {
     from : options.aws.from,
-    to : options.aws.to,
+    to : options.to,
     subject : 'User metrics for the week of ' + getDate()
   };
 
@@ -200,6 +206,7 @@ function five(reports){
       log.error(error);
     } else {
       log.info("CSVs Sent!");
+	  process.exit(0);
     }
 
     transport.close();
@@ -214,11 +221,11 @@ function getDate(){
   var yyyy = today.getFullYear();
 
   if(dd<10) {
-      dd='0'+dd
+      dd='0'+dd;
   } 
 
   if(mm<10) {
-      mm='0'+mm
+      mm='0'+mm;
   } 
 
   today = mm+'/'+dd+'/'+yyyy;
