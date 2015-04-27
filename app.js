@@ -24,7 +24,7 @@ function one(){
 
   var data = JSON.stringify({
     "url": "https://heapanalytics.com/login",
-    "selector": { "csrf" : "$(input[name='_csrf']).val()" },
+    "selector": { "csrf" : "$('input[name=\"_csrf\"]')!.val()" },
     "engine": "jquery",
     "debug": true,
     "useHeaders" : true,
