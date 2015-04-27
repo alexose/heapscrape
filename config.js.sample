@@ -1,0 +1,11 @@
+module.exports = {
+	aws : {
+		from: "Mr. Metrics <admin@example.com>",
+		user: "AWS_USER",
+		pass: "AWS_PASS"
+	},
+	heap : {
+		email : "HEAP_EMAIL",
+		pass : "HEAP_PASS"
+	}
+};
