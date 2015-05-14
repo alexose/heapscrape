@@ -144,7 +144,14 @@ function four(arr){
     // Only look at first 30 rows
     for (var c=0; c<30; c++){
       var cols = [],
-        carr = rarr[c].split(',');
+          rval = rarr[c];
+
+      if (!rval){
+        console.log(rarr);
+        continue;
+      }
+
+      var carr = rarr[c].split(',');
 
       // Push title (unless first row)
       if (c === 0){
