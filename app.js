@@ -128,7 +128,6 @@ function getCSV(params, cb){
     }
   });
 
-console.log(params);
   
   new sieve(data, { hooks : { onFinish : cb } });
 }
