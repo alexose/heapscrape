@@ -86,6 +86,10 @@ function three(json){
 
       // Build form obj
       query.main.format = 'csv';
+      
+      // HACK: Override stop date because heap provides the wrong one
+      query.over.stop = +new Date();
+
       var string = param({query : query});
       getCSV(string, check.bind(this, report.name));
     }
@@ -123,6 +127,8 @@ function getCSV(params, cb){
       "X-Requested-With" : "XMLHttpRequest"
     }
   });
+
+console.log(params);
   
   new sieve(data, { hooks : { onFinish : cb } });
 }
@@ -147,7 +153,6 @@ function four(arr){
           rval = rarr[c];
 
       if (!rval){
-        console.log(rarr);
         continue;
       }
 
